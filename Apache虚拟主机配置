@@ -1,0 +1,95 @@
+# Virtual Hosts
+#
+# Required modules: mod_log_config
+
+# If you want to maintain multiple domains/hostnames on your
+# machine you can setup VirtualHost containers for them. Most configurations
+# use only name-based virtual hosts so the server doesn't need to worry about
+# IP addresses. This is indicated by the asterisks in the directives below.
+#
+# Please see the documentation at 
+# <URL:http://httpd.apache.org/docs/2.4/vhosts/>
+# for further details before you try to setup virtual hosts.
+#
+# You may use the command line option '-S' to verify your virtual host
+# configuration.
+
+#
+# VirtualHost example:
+# Almost any Apache directive may go into a VirtualHost container.
+# The first VirtualHost section is used for all requests that do not
+# match a ServerName or ServerAlias in any <VirtualHost> block.
+# <VirtualHost *:80>
+#    DocumentRoot "/tmp/123"
+#    ServerName 1111.com
+# </VirtualHost>
+
+<VirtualHost *:80>
+    #ServerAdmin webmaster@dummy-host.example.com
+    DocumentRoot "/data/wwwdiscuz/"
+    ServerName   www.aaa.com
+    ServerAlias  www.text.com
+## Apache 用户认证
+ #  <Directory /data/wwwdiscuz/vip/>
+ #         AllowOverride AuthConfig
+ #         AuthName "xxxxxxx"
+ #         AuthType Basic
+ #         AuthUserFile /data/.htpasswd
+ #         require valid-user
+ #  </Directory>
+##  Apache错误日志
+    ErrorLog "logs/discuz-error_log"
+##  配置防盗链
+   <Directory /data/wwwdiscuz/>
+        SetEnvIfNoCase Referer "http://39.106.33.183" local_ref   
+        SetEnvIfNoCase Referer "wwwdiscuz/"    local_ref
+        SetEnvIfNoCase Referer "http://www.jinan10000.com"     local_ref
+        SetEnvIfNoCase Referer "^$"                 local_ref                             
+      <Filesmatch "\.(txt|doc|mp3|zip|rar|jpg|gif|png)">                 
+              Order Allow,Deny                                    
+              Allow from env=local_ref
+      </Filesmatch>
+  </Directory>
+                                                    
+##  静态元素过期时间
+   <IfModule mod_expires.c>
+     ExpiresActive on  
+     ExpiresByType image/gif  "access plus 7 days"
+     ExpiresByType image/jpeg "access plus 240 hours"
+     ExpiresByType image/png "access plus 240 hours"
+     ExpiresByType text/css "now plus 240 hour"
+     ExpiresByType application/x-javascript "now plus 240 hours"
+     ExpiresByType application/javascript "now plus 240 hours"
+     ExpiresByType application/x-shockwave-flash "now plus 240 hours"
+     ExpiresDefault "now plus 0 min"
+   </IfModule>
+## 限制某个目录禁止解析PHP
+     <Directory /data/wwwdiscuz/upload>
+        php_admin_flag engine off
+       <FilesMatch  (.*)\.php(.*)>
+        Order allow,deny
+        Deny from all
+       </FilesMatch>
+     </Directory>
+
+# 访问日志不记录图片
+   SetEnvIf Request_URI ".*\.gif$" img
+   SetEnvIf Request_URI ".*\.jpg$" img 
+   SetEnvIf Request_URI ".*\.png$" img
+   SetEnvIf Request_URI ".*\.bmp$" img
+   SetEnvIf Request_URI ".*\.swf$" img
+   SetEnvIf Request_URI ".*\.js$" img
+   SetEnvIf Request_URI ".*\.css$" img
+## Apache日志切割
+    CustomLog "|/usr/local/apache2.4/bin/rotatelogs -l logs/discuz.com-access_%Y%m%d.log 86400" combined env=!img
+ </VirtualHost>
+
+#<VirtualHost *:80>
+  #  ServerAdmin webmaster@dummy-host2.example.com
+#    DocumentRoot "/data/wwwroot/jinan10000.com"
+#    ServerName jian10000.com
+   # ServerAlias www.jinan10000.com
+#    ErrorLog "logs/10000-error_log"
+#    CustomLog "logs/10000access_log" common
+#</VirtualHost>
+
